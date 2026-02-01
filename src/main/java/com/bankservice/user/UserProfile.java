@@ -24,6 +24,9 @@ public class UserProfile {
     @Column(name = "이름", nullable = false)
     private String name;
 
+    @Column(name = "주소")
+    private String address;
+
     @Column(name = "주민번호_암호화", nullable = false)
     private String residentNumberEncrypted;
 
@@ -52,11 +55,15 @@ public class UserProfile {
             User user,
             String name,
             String residentNumberEncrypted,
-            String phone
+            String phone,
+            String address
+
     ) {
         this.user = user;
         this.name = name;
         this.residentNumberEncrypted = residentNumberEncrypted;
         this.phone = phone;
+        this.address = address;
+
     }
 }

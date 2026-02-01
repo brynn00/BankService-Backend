@@ -39,7 +39,8 @@ public class UserService {
                 user,
                 request.getName(),
                 encrypt(request.getResidentNumber()),
-                request.getPhone()
+                request.getPhone(),
+                request.getAddress()
         );
         userProfileRepository.save(profile);
         System.out.println("🔥 signup() 진입");

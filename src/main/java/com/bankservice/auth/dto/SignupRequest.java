@@ -28,4 +28,8 @@ public class SignupRequest {
     @NotBlank
     @Pattern(regexp = "^01[016789]-\\d{3,4}-\\d{4}$")
     private String phone;
+
+    @NotBlank
+    @Size(max = 255)
+    private String address;
 }

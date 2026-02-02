@@ -14,7 +14,7 @@ public class UserProfile {
 
     @Id
     @Column(name = "사용자_ID")
-    private Long userId;
+    private String userId;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)

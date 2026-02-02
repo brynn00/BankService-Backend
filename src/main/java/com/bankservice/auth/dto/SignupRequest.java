@@ -10,11 +10,16 @@ import lombok.Setter;
 public class SignupRequest {
 
     @NotBlank
+    @Pattern(regexp = "^[a-zA-Z0-9]{5,20}$")
+    private String userId;
+
+
+    @NotBlank
     @Email
     private String email;
 
     @NotBlank
-    @Size(min = 8, max = 20)
+    @Size(min = 4, max = 20)
     private String password;
 
     @NotBlank

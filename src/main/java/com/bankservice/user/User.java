@@ -12,9 +12,8 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "사용자_ID")
-    private Long id;
+    @Column(name = "사용자_ID", length = 20)
+    private String userId;   // ✅ 로그인 ID = PK
 
     @Column(name = "사용자_PW", nullable = false)
     private String passwordHash;
@@ -34,7 +33,8 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-    public User(String email, String passwordHash) {
+    public User(String userId, String email, String passwordHash) {
+        this.userId = userId;
         this.email = email;
         this.passwordHash = passwordHash;
         this.status = "ACTIVE";

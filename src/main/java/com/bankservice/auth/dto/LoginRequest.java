@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class LoginRequest {
-    private String email;
+    private String userId; // email → userId로 변경
     private String password;
 
-    public LoginRequest(String email, String password) {
-        this.email = email;
+    public LoginRequest(String userId, String password) {
+        this.userId = userId;
         this.password = password;
     }
 }

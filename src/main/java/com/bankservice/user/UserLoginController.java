@@ -25,13 +25,13 @@ public class UserLoginController {
     // 로그인 처리
     @PostMapping("/login")
     public String login(
-            @RequestParam String email,
+            @RequestParam String userId,
             @RequestParam String password,
             Model model
     ) {
         try {
             LoginResponse response = authService.login(
-                    new LoginRequest(email, password)
+                    new LoginRequest(userId, password)
             );
 
             // JWT 화면에 표시 (테스트용)

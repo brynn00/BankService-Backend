@@ -32,7 +32,7 @@ public class JwtProvider {
 
     public String createAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getId().toString())
+                .setSubject(user.getUserId())
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expireMs))

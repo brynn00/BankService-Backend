@@ -37,7 +37,7 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
 
         // 1. 사용자 조회
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByUserId(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
         // 2. 상태 검증

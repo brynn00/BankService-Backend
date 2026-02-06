@@ -9,5 +9,5 @@ public class LoginResponse {
     private String accessToken;
     private String refreshToken;
     private int expiresIn;
-
+    private String userName;
 }

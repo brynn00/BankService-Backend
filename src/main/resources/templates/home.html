@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Bank Service</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            background-color: #003366;
+            padding: 16px 0;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            padding: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 상단 네비게이션 -->
+<div class="navbar">
+    <a th:href="@{/account}">조회</a>
+    <a th:href="@{/transfer}">이체</a>
+    <a th:href="@{/support}">고객센터</a>
+    <a th:href="@{/about}">은행소개</a>
+    <!-- 로그인 사용자 이름 -->
+    <div style="margin-left:auto; color:white; text-align:right;"
+         th:if="${userName != null}">
+        <div th:text="${userName} + '님 안녕하세요'"
+             style="font-weight:bold;"></div>
+
+        <div id="timer"
+             style="font-size:13px; margin-top:4px;">
+            로그인 유지시간 00분 00초
+        </div>
+    </div>
+</div>
+
+<!-- 메인 컨텐츠 -->
+<div class="content">
+    <h1>환영합니다</h1>
+    <p>Bank Service 홈 화면입니다.</p>
+
+    <!-- 로그인 정보 테스트용 -->
+    <p th:if="${accessToken != null}">
+        로그인 성공
+    </p>
+</div>
+
+</body>
+</html>
+<script th:inline="javascript">
+    let remainingSeconds = /*[[${expiresIn}]]*/ 0;
+
+    function logout() {
+        fetch('/logout', { method: 'POST' })
+            .then(() => location.href = '/login');
+    }
+
+    function updateTimer() {
+        if (remainingSeconds <= 0) {
+            document.getElementById("timer").innerText =
+                "로그인이 만료되었습니다";
+            logout();
+            return;
+        }
+
+        const m = Math.floor(remainingSeconds / 60);
+        const s = remainingSeconds % 60;
+
+        document.getElementById("timer").innerText =
+            `로그인 유지시간 ${String(m).padStart(2, '0')}분 ${String(s).padStart(2, '0')}초`;
+
+        remainingSeconds--;
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 1000);
+</script>

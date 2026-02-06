@@ -3,6 +3,7 @@ package com.bankservice.user;
 import com.bankservice.auth.AuthService;
 import com.bankservice.auth.dto.LoginRequest;
 import com.bankservice.auth.dto.LoginResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +23,34 @@ public class UserLoginController {
         return "login";
     }
 
-    // 로그인 처리
     @PostMapping("/login")
+    public String login(
+            @RequestParam String userId,
+            @RequestParam String password,
+            HttpSession session,
+            Model model
+    ) {
+        try {
+            LoginResponse response = authService.login(
+                    new LoginRequest(userId, password)
+            );
+
+            // ✅ 세션에 로그인 정보 저장
+            session.setAttribute("userName", response.getUserName());
+            session.setAttribute("accessToken", response.getAccessToken());
+            session.setAttribute("expiresIn", response.getExpiresIn()); // 로그인 만료
+
+            return "redirect:/home"; // 리다이렉트 권장
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "login";
+        }
+    }
+
+
+
+    // 로그인 처리 -- AccessToken, RefreshToken 확인용
+    /*@PostMapping("/login")
     public String login(
             @RequestParam String userId,
             @RequestParam String password,
@@ -44,5 +71,7 @@ public class UserLoginController {
             model.addAttribute("error", e.getMessage());
             return "login"; // 로그인 실패하면 다시 화면
         }
-    }
+    }*/
+
+
 }

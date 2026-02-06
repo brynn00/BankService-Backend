@@ -5,6 +5,8 @@ import com.bankservice.auth.dto.LoginResponse;
 import com.bankservice.token.RefreshToken;
 import com.bankservice.token.RefreshTokenRepository;
 import com.bankservice.user.User;
+import com.bankservice.user.UserProfile;
+import com.bankservice.user.UserProfileRepository;
 import com.bankservice.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,17 +22,24 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final BCryptPasswordEncoder encoder;
     private final JwtProvider jwtProvider;
+    private final UserProfileRepository userProfileRepository; // ✅ 필드 선언
+
+
 
     public AuthService(
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
             BCryptPasswordEncoder encoder,
-            JwtProvider jwtProvider
+            JwtProvider jwtProvider,
+            UserProfileRepository userProfileRepository
+
     ) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.encoder = encoder;
         this.jwtProvider = jwtProvider;
+        this.userProfileRepository = userProfileRepository;
+
     }
 
 
@@ -44,6 +53,9 @@ public class AuthService {
         if (!user.getStatus().equals("ACTIVE")) {
             throw new RuntimeException("차단된 사용자");
         }
+        // 사용자 프로필 조회
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("사용자 프로필 없음"));
 
         // 3. 비밀번호 검증
         if (!encoder.matches(
@@ -67,7 +79,8 @@ public class AuthService {
 
         refreshTokenRepository.save(token);
 
-        return new LoginResponse(accessToken, refreshToken, 1800);
+        return new LoginResponse(accessToken, refreshToken, 1800, profile.getName()
+        );
     }
     private String encrypt(String value) {
         return value;

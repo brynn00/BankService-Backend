@@ -2,87 +2,134 @@ package com.bankservice.auth;
 
 import com.bankservice.auth.dto.LoginRequest;
 import com.bankservice.auth.dto.LoginResponse;
-import com.bankservice.token.RefreshToken;
-import com.bankservice.token.RefreshTokenRepository;
+import com.bankservice.auth.dto.TokenRefreshResponse;
+import com.bankservice.token.RefreshTokenRedisRepository;
 import com.bankservice.user.User;
 import com.bankservice.user.UserProfile;
 import com.bankservice.user.UserProfileRepository;
 import com.bankservice.user.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
+@Slf4j
 @Service
 @Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final BCryptPasswordEncoder encoder;
     private final JwtProvider jwtProvider;
-    private final UserProfileRepository userProfileRepository; // ✅ 필드 선언
-
-
+    private final UserProfileRepository userProfileRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     public AuthService(
             UserRepository userRepository,
-            RefreshTokenRepository refreshTokenRepository,
             BCryptPasswordEncoder encoder,
             JwtProvider jwtProvider,
-            UserProfileRepository userProfileRepository
-
+            UserProfileRepository userProfileRepository,
+            RefreshTokenRedisRepository refreshTokenRedisRepository
     ) {
         this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
         this.encoder = encoder;
         this.jwtProvider = jwtProvider;
         this.userProfileRepository = userProfileRepository;
-
+        this.refreshTokenRedisRepository = refreshTokenRedisRepository;
     }
 
-
+    /**
+     * ✅ 로그인
+     */
     public LoginResponse login(LoginRequest request) {
 
-        // 1. 사용자 조회
         User user = userRepository.findByUserId(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-        // 2. 상태 검증
-        if (!user.getStatus().equals("ACTIVE")) {
+        if (!"ACTIVE".equals(user.getStatus())) {
             throw new RuntimeException("차단된 사용자");
         }
-        // 사용자 프로필 조회
-        UserProfile profile = userProfileRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("사용자 프로필 없음"));
 
-        // 3. 비밀번호 검증
-        if (!encoder.matches(
-                request.getPassword(),
-                user.getPasswordHash())) {
+        if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("비밀번호 불일치");
         }
 
-        // 4. 토큰 생성
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("사용자 프로필 없음"));
+
+        // 1️⃣ AccessToken 발급
         String accessToken = jwtProvider.createAccessToken(user);
+
+        // 2️⃣ RefreshToken 발급 (UUID 기반)
         String refreshToken = jwtProvider.createRefreshToken();
 
-        // 5. Refresh Token 저장 (1인 1토큰)
-        RefreshToken token = refreshTokenRepository
-                .findByUser(user)
-                .orElse(new RefreshToken());
+        // 3️⃣ 사용자 기준 Redis 저장 (TTL 30분, 기존 RT 삭제 포함)
+        long ttlSeconds = 30 * 20L; // 30분
+        refreshTokenRedisRepository.save(refreshToken, user.getUserId(), ttlSeconds);
 
-        token.setUser(user);
-        token.setToken(refreshToken);
-        token.setExpiredAt(LocalDateTime.now().plusDays(14));
-
-        refreshTokenRepository.save(token);
-
-        return new LoginResponse(accessToken, refreshToken, 1800, profile.getName()
+        // 4️⃣ 클라이언트에 expiresIn 전달 (Redis에서 다시 읽지 않고, 발급한 TTL 그대로)
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                (int) ttlSeconds,
+                profile.getName()
         );
     }
-    private String encrypt(String value) {
-        return value;
+
+    /**
+     * ✅ Refresh → Access 재발급
+     */
+    /**
+     * ✅ Refresh → AccessToken 재발급 (RefreshToken 고정)
+     */
+    public TokenRefreshResponse refresh(String oldRefreshToken) {
+
+        // 1️⃣ 기존 RefreshToken으로 사용자 조회
+        String userId = refreshTokenRedisRepository.findUserIdByRefreshToken(oldRefreshToken);
+        if (userId == null) {
+            throw new RuntimeException("RefreshToken 만료 또는 재사용");
+        }
+
+        // 2️⃣ 사용자 조회
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+        // 3️⃣ 새 AccessToken 발급
+        String newAccessToken = jwtProvider.createAccessToken(user);
+
+        // 4️⃣ 기존 RefreshToken TTL 조회
+        Long ttl = refreshTokenRedisRepository.getTtl(userId);
+        if (ttl == null || ttl <= 0) {
+            throw new RuntimeException("RefreshToken 만료");
+        }
+
+        // ✅ RefreshToken 그대로 유지
+        return new TokenRefreshResponse(
+                newAccessToken,
+                oldRefreshToken,
+                ttl.intValue()  // 기존 TTL 그대로 전달
+        );
+    }
+
+    /**
+     * ✅ 남은 TTL 조회
+     */
+    public int getRemainingSeconds(String userId) {
+        Long ttl = refreshTokenRedisRepository.getTtl(userId);
+        if (ttl == null || ttl < 0) return 0;
+        return ttl.intValue();
+    }
+    public int getRemainingSecondsByRefreshToken(String refreshToken) {
+        String userId = refreshTokenRedisRepository.findUserIdByRefreshToken(refreshToken);
+        if (userId == null) return 0;
+        Long ttl = refreshTokenRedisRepository.getTtl(userId);
+        if (ttl == null || ttl < 0) return 0;
+        return ttl.intValue();
+    }
+    /**
+     * ✅ 로그아웃
+     */
+    public void logout(String userId) {
+        refreshTokenRedisRepository.deleteByUserId(userId);
     }
 }

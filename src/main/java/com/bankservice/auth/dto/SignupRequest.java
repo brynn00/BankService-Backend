@@ -23,7 +23,7 @@ public class SignupRequest {
 
     @NotBlank(message = "{password.notblank}")
     @Pattern(
-            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+            regexp = "^(?=.ㅇ*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
             message = "{password.format}"
     )
     private String password;

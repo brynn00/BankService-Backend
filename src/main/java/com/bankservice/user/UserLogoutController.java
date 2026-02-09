@@ -1,19 +1,31 @@
 package com.bankservice.user;
 
-import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
+import com.bankservice.token.RefreshTokenRedisRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class UserLogoutController {
 
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+
+    public UserLogoutController(RefreshTokenRedisRepository refreshTokenRedisRepository) {
+        this.refreshTokenRedisRepository = refreshTokenRedisRepository;
+    }
+
     @PostMapping("/logout")
-    public String logout(HttpSession session) {
+    public void logout(Authentication authentication) {
 
-        // ✅ 세션 완전 종료
-        session.invalidate();
+        if (authentication != null) {
+            String userId = authentication.getName();
 
-        // 로그인 화면으로 이동
-        return "redirect:/login";
+            // ✅ Redis에서 Refresh Token 제거
+            refreshTokenRedisRepository.deleteByUserId(userId);
+
+            // ✅ 인증 정보 제거
+            SecurityContextHolder.clearContext();
+        }
     }
 }

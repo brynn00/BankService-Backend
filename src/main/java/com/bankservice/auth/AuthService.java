@@ -60,21 +60,26 @@ public class AuthService {
         // 1️⃣ AccessToken 발급
         String accessToken = jwtProvider.createAccessToken(user);
 
-        // 2️⃣ RefreshToken 발급 (UUID 기반)
+        // 2️⃣ RefreshToken 발급
         String refreshToken = jwtProvider.createRefreshToken();
 
-        // 3️⃣ 사용자 기준 Redis 저장 (TTL 30분, 기존 RT 삭제 포함)
-        long ttlSeconds = 30 * 20L; // 30분
-        refreshTokenRedisRepository.save(refreshToken, user.getUserId(), ttlSeconds);
+        // 3️⃣ Refresh Redis 저장
+        long refreshTtlSeconds = 60 * 60 * 24 * 7L; // 7일
+        refreshTokenRedisRepository.save(refreshToken, user.getUserId(), refreshTtlSeconds);
 
-        // 4️⃣ 클라이언트에 expiresIn 전달 (Redis에서 다시 읽지 않고, 발급한 TTL 그대로)
+        // ✅ Access TTL은 JwtProvider에서 가져오기
+        int accessTtlSeconds = jwtProvider.getAccessExpireSeconds();
+
+        // 4️⃣ 응답
         return new LoginResponse(
                 accessToken,
                 refreshToken,
-                (int) ttlSeconds,
+                accessTtlSeconds,
+                (int) refreshTtlSeconds,
                 profile.getName()
         );
     }
+
 
     /**
      * ✅ Refresh → Access 재발급

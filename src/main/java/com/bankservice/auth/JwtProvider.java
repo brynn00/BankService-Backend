@@ -94,4 +94,9 @@ public class JwtProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
+    public int getAccessExpireSeconds() {
+        return (int) (accessTokenExpireMs / 1000);
+    }
 }

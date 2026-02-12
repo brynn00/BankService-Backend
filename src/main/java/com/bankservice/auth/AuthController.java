@@ -52,7 +52,6 @@ public class AuthController {
 
         // 클라이언트 JS용 expiresIn 계산 (초 단위)
         int expiresIn = authService.getRemainingSecondsByRefreshToken(loginResponse.getRefreshToken());
-        loginResponse.setExpiresIn(expiresIn);
         // ✅ 세션에도 저장
         session.setAttribute("userName", loginResponse.getUserName());
         session.setAttribute("expiresIn", expiresIn);

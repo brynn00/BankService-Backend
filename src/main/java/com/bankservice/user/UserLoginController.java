@@ -38,7 +38,7 @@ public class UserLoginController {
             // ✅ 세션에 로그인 정보 저장
             session.setAttribute("userName", response.getUserName());
             session.setAttribute("accessToken", response.getAccessToken());
-            session.setAttribute("expiresIn", response.getExpiresIn()); // 로그인 만료
+            session.setAttribute("expiresIn", response.getAccessExpiresIn());
 
             return "redirect:/home"; // 리다이렉트 권장
         } catch (RuntimeException e) {

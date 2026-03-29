@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * [리팩토링] 계좌_인증 테이블 신규 추가
- * - 기존: 계좌 비밀번호 없음
- * - 변경: ERD 스펙에 따라 계좌 비밀번호를 별도 테이블로 분리
- *
+ * 계좌_인증 테이블 신규 추가
  * @MapsId + @OneToOne: Account와 PK를 공유
  *   → 계좌(Account)가 먼저 저장되고, 계좌_인증(AccountAuth)이 같은 ID를 사용
  *   → 계좌 1개당 인증 정보 1개 보장 (1:1 관계)

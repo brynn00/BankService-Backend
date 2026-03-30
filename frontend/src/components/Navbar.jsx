@@ -52,9 +52,8 @@ export default function Navbar() {
    *         (localStorage 초기화는 auth.js의 logout() 함수에서 처리)
    */
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken')
     try {
-      await logout(refreshToken)
+      await logout()
     } finally {
       navigate('/login')
     }

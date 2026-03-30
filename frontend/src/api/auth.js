@@ -6,8 +6,8 @@ export const login = async (userId, password) => {
   return res.data
 }
 
-export const logout = async (refreshToken) => {
-  await client.post('/auth/logout', { refreshToken })
+export const logout = async () => {
+  await client.post('/auth/logout')
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('userName')

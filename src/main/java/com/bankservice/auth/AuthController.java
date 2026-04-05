@@ -2,9 +2,9 @@ package com.bankservice.auth;
 
 import com.bankservice.auth.dto.LoginRequest;
 import com.bankservice.auth.dto.LoginResponse;
-import com.bankservice.auth.dto.TokenRefreshRequest;
 import com.bankservice.auth.dto.TokenRefreshResponse;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,10 +60,20 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public TokenRefreshResponse refresh(
-            @RequestBody TokenRefreshRequest request
-    ) {
-        return authService.refresh(request.getRefreshToken());
+    public TokenRefreshResponse refresh(HttpServletRequest request) {
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        if (refreshToken == null) {
+            throw new RuntimeException("RefreshToken이 없습니다.");
+        }
+        return authService.refresh(refreshToken);
     }
 
     /**
@@ -75,11 +85,16 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @RequestBody(required = false) TokenRefreshRequest request,
+            HttpServletRequest request,
             HttpServletResponse response
     ) {
-        if (request != null && request.getRefreshToken() != null) {
-            authService.logoutByRefreshToken(request.getRefreshToken());
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    authService.logoutByRefreshToken(cookie.getValue());
+                    break;
+                }
+            }
         }
 
         // 쿠키 만료 처리

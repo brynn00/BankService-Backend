@@ -21,7 +21,6 @@ export default function Login() {
        *         refreshToken: 토큰 갱신 시 사용 (httpOnly Cookie에도 중복 저장됨)
        */
       localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
       localStorage.setItem('userName', data.userName)
       localStorage.setItem('accessDuration', String(data.accessExpiresIn))
       localStorage.setItem('accessExpiresAt', String(Date.now() + data.accessExpiresIn * 1000))

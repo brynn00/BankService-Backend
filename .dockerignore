@@ -1,0 +1,10 @@
+build/
+.gradle/
+frontend/
+docs/
+k6/
+*.md
+.git/
+.idea/
+.vscode/
+dump.rdb

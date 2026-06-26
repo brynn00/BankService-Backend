@@ -45,7 +45,10 @@ jobs:
 
       - name: 빌드 및 테스트
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpassword
+          DB_URL: jdbc:postgresql://localhost:5432/testdb
+          DB_USERNAME: testuser
+          DB_PASSWORD: testpassword
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AES_SECRET: ${{ secrets.AES_SECRET }}
+          CRYPTO_SECRET_KEY: ${{ secrets.CRYPTO_SECRET_KEY }}
         run: ./gradlew build
